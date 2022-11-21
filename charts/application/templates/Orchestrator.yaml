@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  labels:
+    app: orchestrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      volumes:
+      - name: shared-data-2
+        emptyDir: {}
+      containers:
+      - name: orchestrator
+        image: tavo0905/orchestrator
+        volumeMounts:
+        - name: shared-data-2
+          mountPath: /appmetrics
+        env:
+          - name: RABBITMQ
+            value: "monitoring-rabbitmq"
+          - name: RABBITPASS
+            valueFrom:
+              secretKeyRef:
+                name: monitoring-rabbitmq
+                key: rabbitmq-password
+                optional: false
+          - name: RABBITQUEUE
+            value: "extract"
+          - name: ESENDPOINT
+            value: quickstart-es-master-nodes
+      - name: orchestrator-metrics
+        image: tavo0905/orchestrator_metrics
+        volumeMounts:
+        - name: shared-data-2
+          mountPath: /appmetrics
+        ports:
+        - name: web
+          containerPort: 8080
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: orchestrator
+  labels:
+    app: orchestrator
+spec:
+  selector:
+    app: orchestrator
+  ports:
+  - name: web
+    port: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: orchestrator
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      app: orchestrator
+  endpoints:
+  - port: web

@@ -1,0 +1,29 @@
+enableECKOperator: true
+enableElasticsearch: true
+enableElasticsearchExporter: true
+
+
+
+#enablePrometheusStack: true
+
+enableRabbitMQ: true
+#enablePrometheusStack: true
+
+
+
+prometheus-elasticsearch-exporter: 
+  serviceMonitor:
+    enabled: true
+  es:
+    uri: https://elastic:mypass@quickstart-es-master-nodes:9200
+    sslSkipVerify: true
+
+rabbitmq:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  auth:
+    #enabled: false
+    username: user
+    password: "123"
