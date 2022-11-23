@@ -12,8 +12,8 @@ enableRabbitMQ: true
 
 
 prometheus-elasticsearch-exporter: 
-  serviceMonitor:
-    enabled: true
+  #serviceMonitor:
+  #  enabled: true
   es:
     uri: https://elastic:mypass@quickstart-es-master-nodes:9200
     sslSkipVerify: true
@@ -21,8 +21,8 @@ prometheus-elasticsearch-exporter:
 rabbitmq:
   metrics:
     enabled: true
-    serviceMonitor:
-      enabled: true
+    #serviceMonitor:
+    #  enabled: true
   auth:
     #enabled: false
     username: user

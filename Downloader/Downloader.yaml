@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: downloader
+  labels:
+    app: downloader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: downloader
+  template:
+    metadata:
+      labels:
+        app: downloader
+    spec:
+      containers:
+      - name: downloader
+        image: adsasdf/downloader # Cambiarla por nuestra imagen cuando sea creada y subida.
+        env:
+          - name: RABBITMQ
+            value: "monitoring-rabbitmq"
+          - name: RABBITPASS
+            valueFrom:
+              secretKeyRef:
+                name: monitoring-rabbitmq
+                key: rabbitmq-password
+                optional: false
+          - name: RABBITQUEUE
+            value: "extract"
+          - name: ESENDPOINT
+            value: quickstart-es-master-nodes
