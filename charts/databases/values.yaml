@@ -22,6 +22,7 @@ mariadb:
     #enabled: false
     rootPassword: "mypass"
     replicationPassword: "mypass"
+    database: mydb
 
 #elasticsearch:
 #  metrics:
