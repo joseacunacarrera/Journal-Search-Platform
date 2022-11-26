@@ -1,5 +1,6 @@
 from flask import *
 from wrapper_mariadb import MariaDB
+from elasticsearch import Elasticsearch
 import json, time
 
 class API:
@@ -23,7 +24,6 @@ class API:
 
     @app.route('/', methods=['GET'])
     def main_page():
-        
         data = {
                     'Pagina': 'Main Page',
                     'Mensaje': 'Succesfully loaded the Main Page',
@@ -34,9 +34,9 @@ class API:
         return jason_dump
 
     @app.route('/jobs/agregar/<int:grp_size>', methods=['POST'])  # /jobs/agregar/?url_elas=[URL]&user=[USER]&password=[PASSWORD]&id_elas=[ID]
-    def agregar_jobs(grp_size: int):
+    def agregar_jobs(self, grp_size: int):
         print(grp_size)
-        #self.addtoMariaDB(grp_size)
+        self.addtoMariaDB(grp_size)
         
         URL_elas = str(request.args.get('url_elas')) #URL de elasticsearch
         user = str(request.args.get('user'))         #Usuario de elasticsearch
@@ -56,9 +56,21 @@ class API:
         
         return "Success", 200
 
-    @app.route('/articulos/buscar', methods=['GET'])
-    def buscar_articulos():
-        return "Buscar Articulos"
+    @app.route('/articulos/buscar/<string:search_input>', methods=['GET'])
+    def buscar_articulos(search_input:str):
+        user_input = search_input
+        ELASTIC_PASSWORD = "<CONTRASEÑA ES>"
+        CLOUD_ID = "deployment-name:..."
+        es = Elasticsearch(
+            cloud_id=CLOUD_ID,
+            basic_auth=("elastic", ELASTIC_PASSWORD)
+        )
+        resp = es.search(index="groups", body={"query": {"match": {"content": str(user_input)}}})
+        print("Got %d Hits:" % resp['hits']['total']['value'])
+        for hit in resp['hits']['hits']:
+            print("%(timestamp)s %(author)s: %(text)s" % hit["_source"])
+
+        return "Success", 200
 
     @app.route('/articulos/obtener', methods=['GET'])
     def obtener_articulo():
