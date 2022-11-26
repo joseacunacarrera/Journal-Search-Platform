@@ -1,10 +1,11 @@
-from wraper_mariadb import MariaDB
-from wraper_rabbitmq import RabbitMQ
+from wrapper_mariadb import MariaDB
+from wrapper_rabbitmq import RabbitMQ
 from elasticsearch import Elasticsearch
 import elasticsearch.exceptions
 import json
 import requests
 import time
+from datetime import datetime, timezone
 
 class Downloader:
 
@@ -58,6 +59,7 @@ class Downloader:
         cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("downloader","in-progress",?,"component")',
                         (group['id'],))
         self.mariadb_instance.connection.commit()
+
         # descargar documentos
         offset = group['offset']
         group_end = offset + job['grp_size']
@@ -75,6 +77,14 @@ class Downloader:
             print(resp['result'])
             time.sleep(self.SLEEP_TIME)
             offset += 1
+
+        # Actualiza el registro en la tabla history
+        completedDatetime = datetime.now(timezone.utc)
+        completedDatetime = completedDatetime.strftime("%Y-%m-%d %H:%M:%S")
+
+        cursor.execute('UPDATE history SET status="completed", end=? WHERE grp_id=? AND stage="downloader"',
+                        (completedDatetime,group['id']))
+
         # actualizar grupo (status=completed)
         cursor.execute('UPDATE groups SET status="completed" WHERE id=?',
                         (group['id'],))
