@@ -1,5 +1,5 @@
-from wraper_mariadb import MariaDB
-from wraper_rabbitmq import RabbitMQ
+from wrapper_mariadb import MariaDB
+from wrapper_rabbitmq import RabbitMQ
 from elasticsearch import Elasticsearch
 import elasticsearch.exceptions
 import json
