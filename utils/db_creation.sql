@@ -18,7 +18,7 @@ USE `mydb` ;
 -- Table `mydb`.`jobs`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`jobs` (
-  `id` INT(11) NOT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
   `created` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `status` VARCHAR(45) NULL DEFAULT NULL,
   `end` DATETIME NULL DEFAULT NULL,
@@ -33,7 +33,7 @@ DEFAULT CHARACTER SET = utf8mb3;
 -- Table `mydb`.`groups`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`groups` (
-  `id` INT(11) NOT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
   `created` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `end` DATETIME NULL DEFAULT NULL,
   `stage` VARCHAR(45) NULL DEFAULT NULL,
@@ -56,7 +56,7 @@ DEFAULT CHARACTER SET = utf8mb3;
 -- Table `mydb`.`history`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`history` (
-  `id` INT(11) NOT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
   `component` VARCHAR(45) NULL DEFAULT NULL,
   `status` VARCHAR(45) NULL DEFAULT NULL,
   `created` DATETIME DEFAULT CURRENT_TIMESTAMP,
