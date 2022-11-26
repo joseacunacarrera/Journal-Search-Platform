@@ -1,57 +1,76 @@
 from flask import *
+from wrapper_mariadb import MariaDB
 import json, time
 
-
-app = Flask(__name__)
-
-@app.route('/', methods=['GET'])
-def main_page():
+class API:
     
-    data = {
-                'Pagina': 'Main Page',
-                'Mensaje': 'Succesfully loaded the Main Page',
-                'Timestamp': time.time()        
-            }
+    app = Flask(__name__)
+    def __init__(self,
+                url_mariadb,
+                pass_mariadb,
+                user_mariadb,
+                db_name) -> None:
+        
+        self.mariadb_instance = MariaDB(url_mariadb, pass_mariadb, user_mariadb, db_name)
 
-    jason_dump = json.dumps(data)  #se pasan los datos a JSON
-    return jason_dump
+    def addtoMariaDB(self, size):
+        mariaDBcursor = self.mariadb_instance.getConnectionMariaDB()
+        try:
+            mariaDBcursor.execute('INSERT INTO jobs (status,grp_size) VALUES (?,?)', ('in-progess',size))
+            self.mariadb_instance.connection.commit()
+        except mariaDBcursor.Error as e: 
+            print(f"Error: {e}")
 
-@app.route('/jobs/agregar/', methods=['POST'])  # /jobs/agregar/?url_elas=[URL]&user=[USER]&password=[PASSWORD]&id_elas=[ID]
-def agregar_jobs():
+    @app.route('/', methods=['GET'])
+    def main_page():
+        
+        data = {
+                    'Pagina': 'Main Page',
+                    'Mensaje': 'Succesfully loaded the Main Page',
+                    'Timestamp': time.time()        
+                }
 
-    URL_elas = str(request.args.get('url_elas')) #URL de elasticsearch
-    user = str(request.args.get('user'))         #Usuario de elasticsearch
-    password = str(request.args.get('password')) #Password de elasticsearch
-    id_elas = str(request.args.get('id_elas'))   #Indice de elasticsearch
+        jason_dump = json.dumps(data)  #se pasan los datos a JSON
+        return jason_dump
 
-    data = {
-                'Pagina': 'Agregar Job',
-                'URL': f'{URL_elas}',
-                'USER': f'{user}',
-                'PASSWORD': f'{password}',
-                'ID': f'{id_elas}',
-                'Timestamp': time.time()        
-            }
+    @app.route('/jobs/agregar/<int:grp_size>', methods=['POST'])  # /jobs/agregar/?url_elas=[URL]&user=[USER]&password=[PASSWORD]&id_elas=[ID]
+    def agregar_jobs(grp_size: int):
+        print(grp_size)
+        #self.addtoMariaDB(grp_size)
+        
+        URL_elas = str(request.args.get('url_elas')) #URL de elasticsearch
+        user = str(request.args.get('user'))         #Usuario de elasticsearch
+        password = str(request.args.get('password')) #Password de elasticsearch
+        id_elas = str(request.args.get('id_elas'))   #Indice de elasticsearch
 
-    json_dump = json.dumps(data)  #se pasan los datos a JSON
-    
-    return "Success", 200
+        data = {
+                    'Pagina': 'Agregar Job',
+                    'URL': f'{URL_elas}',
+                    'USER': f'{user}',
+                    'PASSWORD': f'{password}',
+                    'ID': f'{id_elas}',
+                    'Timestamp': time.time()        
+                }
 
-@app.route('/articulos/buscar', methods=['GET'])
-def buscar_articulos():
-    return "Buscar Articulos"
+        json_dump = json.dumps(data)  #se pasan los datos a JSON
+        
+        return "Success", 200
 
-@app.route('/articulos/obtener', methods=['GET'])
-def obtener_articulo():
-    return"Obtener Articulo"
+    @app.route('/articulos/buscar', methods=['GET'])
+    def buscar_articulos():
+        return "Buscar Articulos"
 
-@app.route('/articulos/like', methods=['POST'])
-def likear_articulo():
-    return"Likear Articulo"
-    
-@app.route('/artuculos/gustados', methods=['GET'])
-def articulos_gustados():
-    return"Articulos gustados"
+    @app.route('/articulos/obtener', methods=['GET'])
+    def obtener_articulo():
+        return"Obtener Articulo"
 
-if __name__ == "__main__":
-   app.run(host='localhost', port=5000)
+    @app.route('/articulos/like', methods=['POST'])
+    def likear_articulo():
+        return"Likear Articulo"
+        
+    @app.route('/artuculos/gustados', methods=['GET'])
+    def articulos_gustados():
+        return"Articulos gustados"
+
+    if __name__ == "__main__":
+        app.run(host='localhost', port=5000)
