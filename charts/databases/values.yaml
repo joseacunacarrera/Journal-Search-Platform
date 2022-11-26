@@ -1,7 +1,7 @@
 enableMariaDB: true
 installElastic: true
 #enableElasticDB: true
-installKibana: false
+installKibana: true
 
 mariadb:
   #architecture: replication
