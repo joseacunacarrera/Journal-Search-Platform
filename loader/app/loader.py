@@ -24,31 +24,39 @@ class Loader:
         self.rabbit_queue_out = rabbit_queue_out
 
     def load(self):
-        cursor = self.mariadb_instance.getConnectionMariaDB()
         channel = self.rabbitmq_instance.getConnectionRabbitMQ()
         while True:
+            cursor = self.mariadb_instance.getConnectionMariaDB()
             # get 1 pending job
             cursor.execute('SELECT id, created, status, end, loader, grp_size FROM jobs WHERE status = "pending"')
             pending_job = cursor.fetchone() 
             if pending_job is not None:                
                 print(pending_job)     
                 # agregar la información del pod que lo está procesando
-                cursor.execute('UPDATE jobs SET status="in-progress", loader=? WHERE id=?',("databases-mariadb-0", pending_job['id'])) #todo: que el nombre del loader sea el del pod real
+                cursor.execute('UPDATE jobs SET status="in-progress", loader=? WHERE id=?',
+                              ("databases-mariadb-0", pending_job['id'])) #todo: que el nombre del loader sea el del pod real
                 self.mariadb_instance.connection.commit()
                 # llamar al endpoint y obtener "messages"
                 r = requests.get('https://api.biorxiv.org/covid19/0')
                 messages = r.json()['messages'][0]
                 # calcular cantidad de groups
-                group_quantity = messages['total'] / pending_job['grp_size']
+                grp_size = pending_job['grp_size']
+                group_quantity = messages['total'] / grp_size
                 # crear groups 
                 id_job = pending_job['id']
                 grp_number = 0
+                offset = 0
                 while grp_number <= group_quantity:
-                    cursor.execute('INSERT INTO groups (id_job,grp_number) VALUES (?,?)', (id_job, grp_number))
+                    cursor.execute('INSERT INTO groups (id_job, grp_number, `offset`) VALUES (?,?,?)', 
+                                  (id_job, grp_number, offset,))
                     self.mariadb_instance.connection.commit()
                     # publicar en rabbitmq
                     body = json.dumps({"id_job": id_job, "grp_number": grp_number})
                     channel.queue_declare(queue=self.rabbit_queue_out)
                     channel.basic_publish(exchange='', routing_key=self.rabbit_queue_out, body=body)
+                    offset += grp_size
                     grp_number += 1
+            else:
+                print("No pending jobs...")
+            self.mariadb_instance.connection.close()
             time.sleep(self.TIME_SLEEPS)
