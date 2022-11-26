@@ -1,10 +1,20 @@
 from flask import Flask
+import json, time
+
 
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
-def hello_wold():
-    return "Hello World"
+def main_page():
+    
+    data = {
+                'Pagina': 'Main Page',
+                'Mensaje': 'Succesfully loaded the Main Page',
+                'Timestamp': time.time()        
+            }
+
+    jason_dump = json.dumps(data)  #se pasan los datos a JSON
+    return jason_dump
 
 @app.route('/jobs/agregar', methods=['POST'])
 def agregar_jobs():
