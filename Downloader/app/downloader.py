@@ -5,6 +5,7 @@ import elasticsearch.exceptions
 import json
 import requests
 import time
+from datetime import datetime, timezone
 
 class Downloader:
 
@@ -58,22 +59,32 @@ class Downloader:
         cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("downloader","in-progress",?,"component")',
                         (group['id'],))
         self.mariadb_instance.connection.commit()
+
         # descargar documentos
         offset = group['offset']
         group_end = offset + job['grp_size']
         while(offset <= group_end):
             r = requests.get(f'https://api.biorxiv.org/covid19/{offset}')
             rel_complete = r.json()['collection'][0]
+            rel_id = str(job['id'])+str(group['id']) + str(offset)
             # almacenar en elastic
             rel = {"rel_doi": rel_complete["rel_doi"],
                 "rel_site": rel_complete["rel_site"],
                 "rel_title": rel_complete["rel_title"],
                 "rel_abs": rel_complete["rel_abs"],
                 "rel_authors": rel_complete["rel_authors"],}
-            resp = self.es_client.index(index="groups", id=group['id'],document=rel)
+            resp = self.es_client.index(index="groups", id=int(rel_id),document=rel)
             print(resp['result'])
             time.sleep(self.SLEEP_TIME)
             offset += 1
+
+        # Actualiza el registro en la tabla history
+        completedDatetime = datetime.now(timezone.utc)
+        completedDatetime = completedDatetime.strftime("%Y-%m-%d %H:%M:%S")
+
+        cursor.execute('UPDATE history SET status="completed", end=? WHERE grp_id=? AND stage="downloader"',
+                        (completedDatetime,group['id']))
+
         # actualizar grupo (status=completed)
         cursor.execute('UPDATE groups SET status="completed" WHERE id=?',
                         (group['id'],))
