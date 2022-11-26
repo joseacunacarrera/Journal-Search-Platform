@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import *
 import json, time
 
 
@@ -16,9 +16,26 @@ def main_page():
     jason_dump = json.dumps(data)  #se pasan los datos a JSON
     return jason_dump
 
-@app.route('/jobs/agregar', methods=['POST'])
+@app.route('/jobs/agregar/', methods=['POST'])  # /jobs/agregar/?url_elas=[URL]&user=[USER]&password=[PASSWORD]&id_elas=[ID]
 def agregar_jobs():
-    return "Agregar un Job"
+
+    URL_elas = str(request.args.get('url_elas')) #URL de elasticsearch
+    user = str(request.args.get('user'))         #Usuario de elasticsearch
+    password = str(request.args.get('password')) #Password de elasticsearch
+    id_elas = str(request.args.get('id_elas'))   #Indice de elasticsearch
+
+    data = {
+                'Pagina': 'Agregar Job',
+                'URL': f'{URL_elas}',
+                'USER': f'{user}',
+                'PASSWORD': f'{password}',
+                'ID': f'{id_elas}',
+                'Timestamp': time.time()        
+            }
+
+    json_dump = json.dumps(data)  #se pasan los datos a JSON
+    
+    return "Success", 200
 
 @app.route('/articulos/buscar', methods=['GET'])
 def buscar_articulos():
