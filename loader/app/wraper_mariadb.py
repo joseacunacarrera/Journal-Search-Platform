@@ -22,7 +22,7 @@ class MariaDB:
                 port = 3306,
                 database = self.db_name,
             )
-            cursor = self.connection.cursor(dictionary=True)
+            cursor = self.connection.cursor(dictionary=True, buffered=True)
             return cursor
         except mariadb.Error as e:
             print(f"Error connecting to MariaDB Platform: {e}")

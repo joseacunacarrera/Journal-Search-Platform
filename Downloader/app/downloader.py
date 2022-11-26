@@ -4,8 +4,12 @@ from elasticsearch import Elasticsearch
 import elasticsearch.exceptions
 import json
 import requests
+import time
 
 class Downloader:
+
+    REQUEST_PER_SECOND = 100
+    SLEEP_TIME = 1 / REQUEST_PER_SECOND
 
     def __init__(self,
                 url_mariadb,
@@ -41,6 +45,9 @@ class Downloader:
         cursor = self.mariadb_instance.getConnectionMariaDB()
         body_obj = json.loads(body)
         # actualizar grupo (stage=downloader, status=in-progress)
+        cursor.execute('SELECT * FROM jobs WHERE id=?',
+                        (body_obj['id_job'],))
+        job = cursor.fetchone()
         cursor.execute('SELECT * FROM groups WHERE id_job=? AND grp_number=?',
                         (body_obj['id_job'], body_obj['grp_number']))
         group = cursor.fetchone()
@@ -52,16 +59,21 @@ class Downloader:
                         (group['id'],))
         self.mariadb_instance.connection.commit()
         # descargar documentos
-        r = requests.get(f'https://api.biorxiv.org/covid19/{group["grp_number"]}')
-        rel_complete = r.json()['collection'][0]
-        # almacenar en elastic
-        rel = {"rel_doi": rel_complete["rel_doi"],
-               "rel_site": rel_complete["rel_site"],
-               "rel_title": rel_complete["rel_title"],
-               "rel_abs": rel_complete["rel_abs"],
-               "rel_authors": rel_complete["rel_authors"],}
-        resp = self.es_client.index(index="groups", id=group['id'],document=rel)
-        print(resp['result'])
+        offset = group['offset']
+        group_end = offset + job['grp_size']
+        while(offset <= group_end):
+            r = requests.get(f'https://api.biorxiv.org/covid19/{offset}')
+            rel_complete = r.json()['collection'][0]
+            # almacenar en elastic
+            rel = {"rel_doi": rel_complete["rel_doi"],
+                "rel_site": rel_complete["rel_site"],
+                "rel_title": rel_complete["rel_title"],
+                "rel_abs": rel_complete["rel_abs"],
+                "rel_authors": rel_complete["rel_authors"],}
+            resp = self.es_client.index(index="groups", id=group['id'],document=rel)
+            print(resp['result'])
+            time.sleep(self.SLEEP_TIME)
+            offset += 1
         # actualizar grupo (status=completed)
         cursor.execute('UPDATE groups SET status="completed" WHERE id=?',
                         (group['id'],))
