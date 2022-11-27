@@ -112,7 +112,7 @@ Pasos:
 - En el campo "Local port to forward from:", introduzca 3000 y presione el boton "Start"
 - Ya con el port forward hecho de cualquiera de las dos maneras antes mencionadas, abra la aplicacion de Ngrok y escriba el comando `ngrok.exe http 3000`
 - Copie el primer link del campo forwarding (se vera algo parecido a: https://2436-190-113-114-40.ngrok.io) y peguelo en la variable "url" de la aplicación de Thunkable.
-
+- Para cada componente que requiera una llamada al API, para realizar el paso de variables se debe incluir ese URL y las variables a utilizar. 
 # Recomendaciones. 
 - Utilizar los helm charts de bitnami para la creación de las bases de datos en Kubernetes ya que estos están listos para usarse, tienen una extensa documentación que se puede consultar y son muy usados, por lo que si se da un error este se puede buscar en internet y probablemente se encuentre alguien que se haya encontrado con el mismo.
 - Contar con una computadoras con al menos 16GB de memoria principal para correr el proyecto, ya que los pods en  Kubernetes terminan haciendo que Docker Desktop consuma hasta 5GB de memoria o mas.
