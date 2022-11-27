@@ -1,0 +1,6 @@
+pika
+mariadb
+elasticsearch
+requests
+datetime
+xmltodict

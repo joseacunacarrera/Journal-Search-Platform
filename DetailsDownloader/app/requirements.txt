@@ -1,0 +1,5 @@
+pika
+mariadb
+elasticsearch
+requests
+datetime

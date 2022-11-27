@@ -19,7 +19,7 @@ class MariaDB:
                 host = self.url_mariadb,
                 user = self.user_mariadb,
                 password = self.pass_mariadb,
-                port = 3307,
+                port = 3306,
                 database = self.db_name,
             )
             cursor = self.connection.cursor(dictionary=True)

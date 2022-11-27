@@ -24,13 +24,15 @@ class DetailsDownloader:
                 elastic_pass,
                 elastic_host,
                 rabbit_queue_in,
-                rabbit_queue_out) -> None:
+                rabbit_queue_out,
+                pod_name) -> None:
         
         self.mariadb_instance = MariaDB(url_mariadb, pass_mariadb, user_mariadb, db_name)
         self.rabbitmq_instance = RabbitMQ(rabbit_pass, rabbit_host, rabbit_user)
         self.es_client = Elasticsearch("https://"+elastic_host+":9200", basic_auth=(elastic_user,elastic_pass), verify_certs = False)
         self.rabbit_queue_in = rabbit_queue_in
         self.rabbit_queue_out = rabbit_queue_out
+        self.pod_name = pod_name
 
     
     def callback(self, ch, method, properties, body):
@@ -54,8 +56,8 @@ class DetailsDownloader:
         self.mariadb_instance.connection.commit()
 
         # Agrega información a la tabla de history
-        cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("details-downloader","in-progress",?,"component")',
-                        (group['id'],))
+        cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("details-downloader","in-progress",?,?)',
+                        (group['id'],self.pod_name))
         self.mariadb_instance.connection.commit()
 
         # Proceso de descarga documentos
@@ -72,7 +74,6 @@ class DetailsDownloader:
 
             # Descarga el documento respectivo en base a su rel_doi y rel_site
             r = requests.get(f'https://api.biorxiv.org/details/{rel_site}/{rel_doi}')
-            print("https://api.biorxiv.org/details/"+str(rel_site)+"/"+str(rel_doi))
             rel_complete = r.json()['collection'][0]
 
             # Se crea el diccionario que va a ser utilizado para actualizar el documento con los details
@@ -83,6 +84,9 @@ class DetailsDownloader:
             
             # Hace el update del documento en ES e imprime el resultado de la operación
             respDetails = self.es_client.update(index="groups", id=int(rel_id), doc=details)
+            print("URL para obtener detalles: https://api.biorxiv.org/details/"+str(rel_site)+"/"+str(rel_doi))
+            print("Grupo: "+str(group['id']))
+            print("Documento actualizado: "+rel_id)
             print(respDetails['result'])
             time.sleep(self.SLEEP_TIME)
             offset += 1

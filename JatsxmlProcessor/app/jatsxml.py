@@ -25,13 +25,17 @@ class JatsxmlProcessor:
                 elastic_pass,
                 elastic_host,
                 rabbit_queue_in,
-                rabbit_queue_out) -> None:
+                rabbit_queue_out,
+                pod_name,
+                elastic_index) -> None:
         
         self.mariadb_instance = MariaDB(url_mariadb, pass_mariadb, user_mariadb, db_name)
         self.rabbitmq_instance = RabbitMQ(rabbit_pass, rabbit_host, rabbit_user)
         self.es_client = Elasticsearch("https://"+elastic_host+":9200", basic_auth=(elastic_user,elastic_pass), verify_certs = False)
         self.rabbit_queue_in = rabbit_queue_in
         self.rabbit_queue_out = rabbit_queue_out
+        self.pod_name = pod_name
+        self.elastic_index = elastic_index
 
     
     def callback(self, ch, method, properties, body):
@@ -55,8 +59,8 @@ class JatsxmlProcessor:
         self.mariadb_instance.connection.commit()
 
         # Agrega información a la tabla de history
-        cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("jatsxml-processor","in-progress",?,"component")',
-                        (group['id'],))
+        cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("jatsxml-processor","in-progress",?,?)',
+                        (group['id'],self.pod_name))
         self.mariadb_instance.connection.commit()
 
         # Proceso de descarga documentos
@@ -89,18 +93,18 @@ class JatsxmlProcessor:
             data_xml_string= xmlBytes.decode('utf8').replace("'", '"')
             xmlToRead.close()
 
-            # Parsea el string xml
+            # Parsea el string xml a string json
             data_json= xmltodict.parse(data_xml_string)
             data_json_string= json.dumps(data_json)
 
             data_dict={}
             data_dict['jatsxmlDoc']= data_json_string
 
-            print(rel_id)
-            print(r)
-
             # Hace el update del documento en ES e imprime el resultado de la operación
             respDetails = self.es_client.update(index="groups", id=int(rel_id), doc=data_dict)
+            
+            print("Grupo: "+str(group['id']))
+            print("Documento actualizado: "+rel_id)
             print(respDetails['result'])
 
             time.sleep(self.SLEEP_TIME)
