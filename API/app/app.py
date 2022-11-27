@@ -15,7 +15,7 @@ config = {
 cred = credentials.Certificate("API/app/credentials.json")
 default_app = firebase_admin.initialize_app(cred, options = config)
 
-mariadb_instance = MariaDB('127.0.0.1', 'mypass', 'root', 'mydb')
+mariadb_instance = MariaDB('databases-mariadb', 'mypass', 'root', 'mydb')
 
 def addtoMariaDB(size):
     mariaDBcursor = mariadb_instance.getConnectionMariaDB()
@@ -53,7 +53,7 @@ def buscar_articulos():
 
     user_input = search_input
     ELASTIC_PASSWORD = "mypass"
-    es = Elasticsearch("https://localhost:9200", basic_auth=('elastic',ELASTIC_PASSWORD), verify_certs = False)
+    es = Elasticsearch("https://quickstart-es-master-nodes:9200", basic_auth=('elastic',ELASTIC_PASSWORD), verify_certs = False)
 
     query_body = {
         "query": {
@@ -99,7 +99,7 @@ def obtener_articulo():
     search_input = str(request.args.get('search_input'))
     article_title = search_input
     ELASTIC_PASSWORD = "mypass"
-    es = Elasticsearch("https://localhost:9200", basic_auth=('elastic',ELASTIC_PASSWORD), verify_certs = False)
+    es = Elasticsearch("https://quickstart-es-master-nodes:9200", basic_auth=('elastic',ELASTIC_PASSWORD), verify_certs = False)
 
     query_body = {
         "query": {
