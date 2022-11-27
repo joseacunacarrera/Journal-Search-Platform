@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jatsxml
+  labels:
+    app: jatsxml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jatsxml
+  template:
+    metadata:
+      labels:
+        app: jatsxml
+    spec:
+      containers:
+      - name: jatsxml
+        image: joseacunacarrera/jatsxml
+        env:
+          - name: URL_MARIADB
+            value: "databases-mariadb"
+          - name: PASS_MARIADB
+            value: "mypass"
+          - name: USER_MARIADB
+            value: "root"
+          - name: DB_NAME
+            value: "mydb"
+          - name: RABBIT_PASS
+            value: "123"
+          - name: RABBIT_HOST
+            value: "monitoring-rabbitmq"
+          - name: RABBIT_USER
+            value: "user"
+          - name: ELASTIC_USER
+            value: "elastic"
+          - name: ELASTIC_PASS
+            value: "mypass"
+          - name: ELASTIC_HOST
+            value: "quickstart-es-master-nodes"
+          - name: RABBIT_QUEUE_IN
+            value: "loader_queue_out"
+          - name: RABBIT_QUEUE_OUT
+            value: "downloader_queue_out"
+          - name: ELASTIC_INDEX
+            value: "groups"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jatsxml-service
+  labels:
+    app: jatsxml
+spec:
+  type: ClusterIP
+  selector:
+    app: jatsxml
+  ports:
+    - port: 3004

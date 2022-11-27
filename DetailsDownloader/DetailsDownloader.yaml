@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: detailsDownloader
+  labels:
+    app: detailsDownloader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: detailsDownloader
+  template:
+    metadata:
+      labels:
+        app: detailsDownloader
+    spec:
+      containers:
+      - name: detailsDownloader
+        image: joseacunacarrera/detailsDownloader
+        env:
+          - name: URL_MARIADB
+            value: "databases-mariadb"
+          - name: PASS_MARIADB
+            value: "mypass"
+          - name: USER_MARIADB
+            value: "root"
+          - name: DB_NAME
+            value: "mydb"
+          - name: RABBIT_PASS
+            value: "123"
+          - name: RABBIT_HOST
+            value: "monitoring-rabbitmq"
+          - name: RABBIT_USER
+            value: "user"
+          - name: ELASTIC_USER
+            value: "elastic"
+          - name: ELASTIC_PASS
+            value: "mypass"
+          - name: ELASTIC_HOST
+            value: "quickstart-es-master-nodes"
+          - name: RABBIT_QUEUE_IN
+            value: "downloader_queue_out"
+          - name: RABBIT_QUEUE_OUT
+            value: "detailsdownloader_queue_out"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: detailsDownloader-service
+  labels:
+    app: detailsDownloader
+spec:
+  type: ClusterIP
+  selector:
+    app: detailsDownloader
+  ports:
+    - port: 3003

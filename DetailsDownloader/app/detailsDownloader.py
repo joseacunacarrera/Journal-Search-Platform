@@ -24,13 +24,15 @@ class DetailsDownloader:
                 elastic_pass,
                 elastic_host,
                 rabbit_queue_in,
-                rabbit_queue_out) -> None:
+                rabbit_queue_out,
+                pod_name) -> None:
         
         self.mariadb_instance = MariaDB(url_mariadb, pass_mariadb, user_mariadb, db_name)
         self.rabbitmq_instance = RabbitMQ(rabbit_pass, rabbit_host, rabbit_user)
         self.es_client = Elasticsearch("https://"+elastic_host+":9200", basic_auth=(elastic_user,elastic_pass), verify_certs = False)
         self.rabbit_queue_in = rabbit_queue_in
         self.rabbit_queue_out = rabbit_queue_out
+        self.pod_name = pod_name
 
     
     def callback(self, ch, method, properties, body):
@@ -54,8 +56,8 @@ class DetailsDownloader:
         self.mariadb_instance.connection.commit()
 
         # Agrega información a la tabla de history
-        cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("details-downloader","in-progress",?,"component")',
-                        (group['id'],))
+        cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("details-downloader","in-progress",?,?)',
+                        (group['id'],self.pod_name))
         self.mariadb_instance.connection.commit()
 
         # Proceso de descarga documentos
