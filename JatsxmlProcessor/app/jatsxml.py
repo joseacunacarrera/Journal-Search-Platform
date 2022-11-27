@@ -75,20 +75,21 @@ class JatsxmlProcessor:
             if "jatsxml" in dicDocumento.keys():
                 jatsxmlURL=dicDocumento['jatsxml']
 
-            # Descarga del documento jatsxml
+            # Realiza un get al URL de jatsxml
             r = requests.get(jatsxmlURL)
 
+            # Escribe el contenido del request en el archivo jats.xml
             xmlToWrite= open('jats.xml', 'wb')
             xmlToWrite.write(r.content)
             xmlToWrite.close()
 
+            # Lee el archivo jats.xml, lo decodifica y obtiene un string del xml.
             xmlToRead = open('jats.xml', 'rb')
             xmlBytes= xmlToRead.read()
             data_xml_string= xmlBytes.decode('utf8').replace("'", '"')
-            
-            #data_dict['jatsxmlDoc']= xmltodict.parse(xmlToRead)
             xmlToRead.close()
 
+            # Parsea el string xml
             data_json= xmltodict.parse(data_xml_string)
             data_json_string= json.dumps(data_json)
 
@@ -111,13 +112,18 @@ class JatsxmlProcessor:
 
         cursor.execute('UPDATE history SET status="completed", end=? WHERE grp_id=? AND stage="jatsxml-processor"',
                         (completedDatetime,group['id']))
+        self.mariadb_instance.connection.commit()
         
-        # actualizar grupo (status=completed)
+        # Actualiza el grupo (status=completed)
         cursor.execute('UPDATE groups SET status="completed" WHERE id=?',
                         (group['id'],))
         self.mariadb_instance.connection.commit()
-        # agregar mensaje a cola de salida
-        ch.basic_publish(exchange='', routing_key=self.rabbit_queue_out, body=body)
+
+        # Elimina el grupo de MariaDB
+        '''cursor.execute('DELETE FROM groups WHERE id=?',
+                        (group['id'],))
+        self.mariadb_instance.connection.commit()'''
+
         
     def process(self):
         # Obtiene el mensaje de la cola de entrada

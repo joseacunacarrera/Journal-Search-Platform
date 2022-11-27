@@ -93,6 +93,7 @@ class DetailsDownloader:
 
         cursor.execute('UPDATE history SET status="completed", end=? WHERE grp_id=? AND stage="details-downloader"',
                         (completedDatetime,group['id']))
+        self.mariadb_instance.connection.commit()
         
         # actualizar grupo (status=completed)
         cursor.execute('UPDATE groups SET status="completed" WHERE id=?',
