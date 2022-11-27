@@ -4,7 +4,6 @@ from elasticsearch import Elasticsearch
 import firebase_admin
 from firebase_admin import credentials, db, auth
 import json, time
-
     
 app = Flask(__name__)
 config = {
@@ -13,7 +12,7 @@ config = {
     'storageBucket': "journal-search-platform.appspot.com",
 }
 
-cred = credentials.Certificate("credentials.json")
+cred = credentials.Certificate("API/app/credentials.json")
 default_app = firebase_admin.initialize_app(cred, options = config)
 
 mariadb_instance = MariaDB('127.0.0.1', 'mypass', 'root', 'mydb')
