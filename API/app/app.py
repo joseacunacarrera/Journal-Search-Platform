@@ -11,7 +11,7 @@ mariadb_instance = MariaDB('127.0.0.1', 'mypass', 'root', 'mydb')
 def addtoMariaDB(size):
     mariaDBcursor = mariadb_instance.getConnectionMariaDB()
     try:
-        mariaDBcursor.execute('INSERT INTO jobs (`status`, grp_size) VALUES ("in-progress", ?)', (size,))
+        mariaDBcursor.execute('INSERT INTO jobs (`status`, grp_size) VALUES ("pending", ?)', (size,))
         mariadb_instance.connection.commit()
     except Exception as e: 
         print(f"Error: {e}")
