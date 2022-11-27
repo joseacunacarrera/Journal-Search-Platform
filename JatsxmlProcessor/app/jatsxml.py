@@ -37,6 +37,15 @@ class JatsxmlProcessor:
         self.pod_name = pod_name
         self.elastic_index = elastic_index
 
+    def es_create_index_if_not_exists(self, index):
+        """Create the given ElasticSearch index and ignore error if it already exists"""
+        try:
+            self.es_client.indices.create(index=index)
+        except elasticsearch.exceptions.RequestError as ex:
+            if ex.error == 'resource_already_exists_exception':
+                pass # Index already exists. Ignore.
+            else: # Other exception - raise it
+                raise ex
     
     def callback(self, ch, method, properties, body):
         # Transforma el json de la cola de entrada en un diccionario de Python
@@ -66,49 +75,62 @@ class JatsxmlProcessor:
         # Proceso de descarga documentos
         offset = group['offset']
         group_end = offset + job['grp_size']
-        while(offset <= group_end):
-            # Busca cada documento con su respectivo rel_id
-            rel_id = str(job['id'])+str(group['id']) + str(offset)
-            groupsQuery = {"query" : {"term" : {"_id" : rel_id}}}
-            resp = self.es_client.search(index="groups", body = groupsQuery)
+        while(offset < group_end):
+            try:
+                # Busca cada documento con su respectivo rel_id
+                rel_id = str(job['id'])+str(group['grp_number']) + str(offset)
+                groupsQuery = {"query" : {"term" : {"_id" : rel_id}}}
+                resp = self.es_client.search(index="groups", body = groupsQuery)
 
-            dicDocumento= resp['hits']['hits'][0]['_source']
+                dicDocumento= resp['hits']['hits'][0]['_source']
 
-            # Busca si existe el campo de jatsxml en el documento
-            jatsxmlURL= ""
-            if "jatsxml" in dicDocumento.keys():
-                jatsxmlURL=dicDocumento['jatsxml']
+                # Busca si existe el campo de jatsxml en el documento
+                jatsxmlURL= ""
+                if "jatsxml" in dicDocumento.keys():
+                    jatsxmlURL=dicDocumento['jatsxml']
 
-            # Realiza un get al URL de jatsxml
-            r = requests.get(jatsxmlURL)
+                # Realiza un get al URL de jatsxml
+                r = requests.get(jatsxmlURL)
 
-            # Escribe el contenido del request en el archivo jats.xml
-            xmlToWrite= open('jats.xml', 'wb')
-            xmlToWrite.write(r.content)
-            xmlToWrite.close()
+                # Escribe el contenido del request en el archivo jats.xml
+                xmlToWrite= open('jats.xml', 'wb')
+                xmlToWrite.write(r.content)
+                xmlToWrite.close()
 
-            # Lee el archivo jats.xml, lo decodifica y obtiene un string del xml.
-            xmlToRead = open('jats.xml', 'rb')
-            xmlBytes= xmlToRead.read()
-            data_xml_string= xmlBytes.decode('utf8').replace("'", '"')
-            xmlToRead.close()
+                # Lee el archivo jats.xml, lo decodifica y obtiene un string del xml.
+                xmlToRead = open('jats.xml', 'rb')
+                xmlBytes= xmlToRead.read()
+                data_xml_string= xmlBytes.decode('utf8').replace("'", '"')
+                xmlToRead.close()
 
-            # Parsea el string xml a string json
-            data_json= xmltodict.parse(data_xml_string)
-            data_json_string= json.dumps(data_json)
+                # Parsea el string xml a string json
+                data_json= xmltodict.parse(data_xml_string)
+                data_json_string= json.dumps(data_json)
 
-            data_dict={}
-            data_dict['jatsxmlDoc']= data_json_string
+                data_dict={}
+                data_dict['jatsxmlDoc']= data_json_string
+                dicDocumento['jatsxmlDoc']= data_json_string
 
-            # Hace el update del documento en ES e imprime el resultado de la operación
-            respDetails = self.es_client.update(index="groups", id=int(rel_id), doc=data_dict)
-            
-            print("Grupo: "+str(group['id']))
-            print("Documento actualizado: "+rel_id)
-            print(respDetails['result'])
+                # Hace el update del documento en ES e imprime el resultado de la operación
+                respDetails=[]
+                if self.elastic_index == "groups":
+                    respDetails = self.es_client.update(index="groups", id=int(rel_id), doc=data_dict)
+                else:
+                    self.es_create_index_if_not_exists(self.elastic_index)
+                    respDetails = self.es_client.index(index=self.elastic_index, id=int(rel_id),document=dicDocumento)
+                    delDetails =  self.es_client.delete(index="groups", id=int(rel_id))
+                
+                print("Grupo: "+str(group['grp_number']))
+                print("Documento actualizado o insertado: "+rel_id)
+                print(respDetails['result'])
+                print(delDetails['result'])
 
-            time.sleep(self.SLEEP_TIME)
-            offset += 1
+                time.sleep(self.SLEEP_TIME)
+                offset += 1
+            except:
+                offset += 1
+                continue
+
 
         # Actualiza el registro en la tabla history
         completedDatetime = datetime.now(timezone.utc)

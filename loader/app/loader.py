@@ -48,7 +48,7 @@ class Loader:
                 id_job = pending_job['id']
                 grp_number = 0
                 offset = 0
-                while grp_number <= group_quantity:
+                while grp_number < group_quantity:
                     cursor.execute('INSERT INTO groups (id_job, grp_number, `offset`) VALUES (?,?,?)', 
                                   (id_job, grp_number, offset,))
                     self.mariadb_instance.connection.commit()
@@ -58,6 +58,7 @@ class Loader:
                     channel.basic_publish(exchange='', routing_key=self.rabbit_queue_out, body=body)
                     offset += grp_size
                     grp_number += 1
+                    time.sleep(50)
             else:
                 print("No pending jobs...")
             self.mariadb_instance.connection.close()

@@ -63,33 +63,37 @@ class DetailsDownloader:
         # Proceso de descarga documentos
         offset = group['offset']
         group_end = offset + job['grp_size']
-        while(offset <= group_end):
-            # Busca cada documento con su respectivo rel_id
-            rel_id = str(job['id'])+str(group['id']) + str(offset)
-            groupsQuery = {"query" : {"term" : {"_id" : rel_id}}}
-            resp = self.es_client.search(index="groups", body = groupsQuery)
-            rel_site = resp['hits']['hits'][0]['_source']['rel_site']
-            rel_site = rel_site.lower()
-            rel_doi = resp['hits']['hits'][0]['_source']['rel_doi']
+        while(offset < group_end):
+            try:
+                # Busca cada documento con su respectivo rel_id
+                rel_id = str(job['id'])+str(group['grp_number']) + str(offset)
+                groupsQuery = {"query" : {"term" : {"_id" : rel_id}}}
+                resp = self.es_client.search(index="groups", body = groupsQuery)
+                rel_site = resp['hits']['hits'][0]['_source']['rel_site']
+                rel_site = rel_site.lower()
+                rel_doi = resp['hits']['hits'][0]['_source']['rel_doi']
 
-            # Descarga el documento respectivo en base a su rel_doi y rel_site
-            r = requests.get(f'https://api.biorxiv.org/details/{rel_site}/{rel_doi}')
-            rel_complete = r.json()['collection'][0]
+                # Descarga el documento respectivo en base a su rel_doi y rel_site
+                r = requests.get(f'https://api.biorxiv.org/details/{rel_site}/{rel_doi}')
+                rel_complete = r.json()['collection'][0]
 
-            # Se crea el diccionario que va a ser utilizado para actualizar el documento con los details
-            details = {}
-            for key in rel_complete:
-                if key not in ['doi','server','title', 'abstract', 'authors', 'author_corresponding', 'author_corresponding_institution']:
-                    details[key] = rel_complete[key]
-            
-            # Hace el update del documento en ES e imprime el resultado de la operación
-            respDetails = self.es_client.update(index="groups", id=int(rel_id), doc=details)
-            print("URL para obtener detalles: https://api.biorxiv.org/details/"+str(rel_site)+"/"+str(rel_doi))
-            print("Grupo: "+str(group['id']))
-            print("Documento actualizado: "+rel_id)
-            print(respDetails['result'])
-            time.sleep(self.SLEEP_TIME)
-            offset += 1
+                # Se crea el diccionario que va a ser utilizado para actualizar el documento con los details
+                details = {}
+                for key in rel_complete:
+                    if key not in ['doi','server','title', 'abstract', 'authors', 'author_corresponding', 'author_corresponding_institution']:
+                        details[key] = rel_complete[key]
+                
+                # Hace el update del documento en ES e imprime el resultado de la operación
+                respDetails = self.es_client.update(index="groups", id=int(rel_id), doc=details)
+                print("URL para obtener detalles: https://api.biorxiv.org/details/"+str(rel_site)+"/"+str(rel_doi))
+                print("Grupo: "+str(group['grp_number']))
+                print("Documento actualizado: "+rel_id)
+                print(respDetails['result'])
+                time.sleep(self.SLEEP_TIME)
+                offset += 1
+            except:
+                offset += 1
+                continue
 
         # Actualiza el registro en la tabla history
         completedDatetime = datetime.now(timezone.utc)
