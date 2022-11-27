@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: downloader
-        image: joseacunacarrera/downloader
+        image: israelhercam/downloader
         env:
           - name: URL_MARIADB
             value: "databases-mariadb"

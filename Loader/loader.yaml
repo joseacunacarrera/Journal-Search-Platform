@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: loader
-        image: joseacunacarrera/loader
+        image: israelhercam/loader
         imagePullPolicy: Always
         env:
           - name: URL_MARIADB

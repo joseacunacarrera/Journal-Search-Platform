@@ -65,10 +65,10 @@ class Downloader:
         # descargar documentos
         offset = group['offset']
         group_end = offset + job['grp_size']
-        while(offset <= group_end):
+        while(offset < group_end):
             r = requests.get(f'https://api.biorxiv.org/covid19/{offset}')
             rel_complete = r.json()['collection'][0]
-            rel_id = str(job['id'])+str(group['id']) + str(offset)
+            rel_id = str(job['id'])+str(group['grp_number']) + str(offset)
             # almacenar en elastic
             rel = {"rel_doi": rel_complete["rel_doi"],
                 "rel_site": rel_complete["rel_site"],
@@ -76,7 +76,7 @@ class Downloader:
                 "rel_abs": rel_complete["rel_abs"],
                 "rel_authors": rel_complete["rel_authors"],}
             resp = self.es_client.index(index="groups", id=int(rel_id),document=rel)
-            print("Grupo: "+str(group['id']))
+            print("Grupo: "+str(group['grp_number']))
             print("Documento descargado: "+rel_id)
             print(resp['result'])
             time.sleep(self.SLEEP_TIME)
