@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loader
+  labels:
+    app: loader
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: loader
+  template:
+    metadata:
+      labels:
+        app: loader
+    spec:
+      containers:
+      - name: loader
+        image: joseacunacarrera/loader
+        imagePullPolicy: Always
+        env:
+          - name: URL_MARIADB
+            value: "databases-mariadb"
+          - name: PASS_MARIADB
+            value: "mypass"
+          - name: USER_MARIADB
+            value: "root"
+          - name: DB_NAME
+            value: "mydb"
+          - name: RABBIT_PASS
+            value: "123"
+          - name: RABBIT_HOST
+            value: "monitoring-rabbitmq"
+          - name: RABBIT_USER
+            value: "user"
+          - name: RABBIT_QUEUE_OUT
+            value: "loader_queue_out"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: loader-service
+  labels:
+    app: loader
+spec:
+  type: ClusterIP
+  selector:
+    app: api
+  ports:
+    - port: 3001

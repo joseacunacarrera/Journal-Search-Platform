@@ -16,12 +16,14 @@ class Loader:
                 rabbit_pass,
                 rabbit_host,
                 rabbit_user,
-                rabbit_queue_out
+                rabbit_queue_out,
+                pod_name
                 ) -> None:
         
         self.mariadb_instance = MariaDB(url_mariadb, pass_mariadb, user_mariadb, db_name)
         self.rabbitmq_instance = RabbitMQ(rabbit_pass, rabbit_host, rabbit_user)
         self.rabbit_queue_out = rabbit_queue_out
+        self.pod_name = pod_name
 
     def load(self):
         channel = self.rabbitmq_instance.getConnectionRabbitMQ()
@@ -34,7 +36,7 @@ class Loader:
                 print(pending_job)     
                 # agregar la información del pod que lo está procesando
                 cursor.execute('UPDATE jobs SET status="in-progress", loader=? WHERE id=?',
-                              ("databases-mariadb-0", pending_job['id'])) #todo: que el nombre del loader sea el del pod real
+                              (self.pod_name, pending_job['id'])) #todo: que el nombre del loader sea el del pod real
                 self.mariadb_instance.connection.commit()
                 # llamar al endpoint y obtener "messages"
                 r = requests.get('https://api.biorxiv.org/covid19/0')
