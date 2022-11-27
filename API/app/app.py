@@ -140,7 +140,7 @@ def likear_articulo():
 
     data = {'user_id': user_id, 'article': article}
 
-    body = json.loads(data)
+    body = json.dumps(data)
     try:
         ref = db.reference("/likes")
         ref.push(body)
@@ -148,16 +148,28 @@ def likear_articulo():
     except Exception as error:
         return f'Error: {error}'
     
-@app.route('/artuculos/gustados', methods=['GET'])
+@app.route('/articulos/gustados', methods=['GET'])
 def articulos_gustados():
     user_id = request.args.get('user_id')
     try:
         ref = db.reference(f'/likes')
 
-        likes = res_to_list(ref.get())
+        #likes = res_to_list(ref.get())
+        json_likes = ref.order_by_child('user_id').get()
+        print(json_likes)
+        likes = json.loads(json_likes.items())
+
+        print(likes)
+
         response = json.dumps(filtrar_likes_usuario(likes=likes, user_id=user_id))
+
+        print(response)
+
         return make_response(response)
     except Exception as error:
+
+        print("erroooooor")
+
         return f'Error: {error}'
 
 
