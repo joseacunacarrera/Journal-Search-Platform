@@ -100,11 +100,11 @@ class JatsxmlProcessor:
             data_dict={}
             data_dict['jatsxmlDoc']= data_json_string
 
-            print(rel_id)
-            print(r)
-
             # Hace el update del documento en ES e imprime el resultado de la operación
             respDetails = self.es_client.update(index="groups", id=int(rel_id), doc=data_dict)
+            
+            print("Grupo: "+str(group['id']))
+            print("Documento actualizado: "+rel_id)
             print(respDetails['result'])
 
             time.sleep(self.SLEEP_TIME)

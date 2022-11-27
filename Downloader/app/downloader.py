@@ -76,6 +76,8 @@ class Downloader:
                 "rel_abs": rel_complete["rel_abs"],
                 "rel_authors": rel_complete["rel_authors"],}
             resp = self.es_client.index(index="groups", id=int(rel_id),document=rel)
+            print("Grupo: "+str(group['id']))
+            print("Documento descargado: "+rel_id)
             print(resp['result'])
             time.sleep(self.SLEEP_TIME)
             offset += 1

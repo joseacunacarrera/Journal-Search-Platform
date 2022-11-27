@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: detailsDownloader
+  name: details-downloader
   labels:
-    app: detailsDownloader
+    app: details-downloader
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: detailsDownloader
+      app: details-downloader
   template:
     metadata:
       labels:
-        app: detailsDownloader
+        app: details-downloader
     spec:
       containers:
-      - name: detailsDownloader
-        image: joseacunacarrera/detailsDownloader
+      - name: details-downloader
+        image: israelhercam/details-downloader
         env:
           - name: URL_MARIADB
             value: "databases-mariadb"
@@ -48,12 +48,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: detailsDownloader-service
+  name: details-downloader-service
   labels:
-    app: detailsDownloader
+    app: details-downloader
 spec:
   type: ClusterIP
   selector:
-    app: detailsDownloader
+    app: details-downloader
   ports:
     - port: 3003

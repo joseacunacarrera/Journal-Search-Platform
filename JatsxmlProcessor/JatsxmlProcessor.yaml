@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: jatsxml
-        image: joseacunacarrera/jatsxml
+        image: israelhercam/jatsxml
         env:
           - name: URL_MARIADB
             value: "databases-mariadb"
@@ -39,9 +39,9 @@ spec:
           - name: ELASTIC_HOST
             value: "quickstart-es-master-nodes"
           - name: RABBIT_QUEUE_IN
-            value: "loader_queue_out"
+            value: "detailsdownloader_queue_out"
           - name: RABBIT_QUEUE_OUT
-            value: "downloader_queue_out"
+            value: "jatsxml_queue_out"
           - name: ELASTIC_INDEX
             value: "groups"
 

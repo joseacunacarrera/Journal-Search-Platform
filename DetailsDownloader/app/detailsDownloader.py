@@ -74,7 +74,6 @@ class DetailsDownloader:
 
             # Descarga el documento respectivo en base a su rel_doi y rel_site
             r = requests.get(f'https://api.biorxiv.org/details/{rel_site}/{rel_doi}')
-            print("https://api.biorxiv.org/details/"+str(rel_site)+"/"+str(rel_doi))
             rel_complete = r.json()['collection'][0]
 
             # Se crea el diccionario que va a ser utilizado para actualizar el documento con los details
@@ -85,6 +84,9 @@ class DetailsDownloader:
             
             # Hace el update del documento en ES e imprime el resultado de la operación
             respDetails = self.es_client.update(index="groups", id=int(rel_id), doc=details)
+            print("URL para obtener detalles: https://api.biorxiv.org/details/"+str(rel_site)+"/"+str(rel_doi))
+            print("Grupo: "+str(group['id']))
+            print("Documento actualizado: "+rel_id)
             print(respDetails['result'])
             time.sleep(self.SLEEP_TIME)
             offset += 1
