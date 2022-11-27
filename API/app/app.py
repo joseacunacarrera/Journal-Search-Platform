@@ -154,14 +154,14 @@ def articulos_gustados():
     try:
         ref = db.reference(f'/likes')
 
-        #likes = res_to_list(ref.get())
-        json_likes = ref.order_by_child('user_id').get()
-        print(json_likes)
-        likes = json.loads(json_likes.items())
+        # #likes = res_to_list(ref.get())
+        # json_likes = ref.order_by_child('user_id').get()
+        # print(json_likes)
+        # likes = json.loads(json_likes.items())
 
-        print(likes)
+        likes = ref.get()
 
-        response = json.dumps(filtrar_likes_usuario(likes=likes, user_id=user_id))
+        response = json.dumps(filtrar_likes_usuario(likes=res_to_list(likes), user_id=user_id))
 
         print(response)
 
@@ -184,12 +184,12 @@ def filtrar_likes_usuario(likes, user_id):
     return lista_likes
 
 def res_to_list(res):
-    fb_keys = list(res.keys())
 
-    for fb_key, value in zip(fb_keys, res.values()):
-        value['fb_key'] = fb_key
+    res_list = []
+    for value in res.values():
+        res_list.append(json.loads(value))
 
-    return list(res.values())
+    return res_list
 
 if __name__ == "__main__":
     app.run(host='localhost', port=5000)
