@@ -27,9 +27,6 @@
     <p align = 'center'>
     Luis Diego Delgado Muñoz
     </p>
-    <p align = 'center'>
-    Alexander Brenes Garita 
-    </p>
     <br></br>
 </p>
 
