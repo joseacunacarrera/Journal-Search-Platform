@@ -24,13 +24,15 @@ class Downloader:
                 elastic_pass,
                 elastic_host,
                 rabbit_queue_in,
-                rabbit_queue_out) -> None:
+                rabbit_queue_out,
+                pod_name) -> None:
         
         self.mariadb_instance = MariaDB(url_mariadb, pass_mariadb, user_mariadb, db_name)
         self.rabbitmq_instance = RabbitMQ(rabbit_pass, rabbit_host, rabbit_user)
         self.es_client = Elasticsearch("https://"+elastic_host+":9200", basic_auth=(elastic_user,elastic_pass), verify_certs = False)
         self.rabbit_queue_in = rabbit_queue_in
         self.rabbit_queue_out = rabbit_queue_out
+        self.pod_name = pod_name
 
     def es_create_index_if_not_exists(self, index):
         """Create the given ElasticSearch index and ignore error if it already exists"""
@@ -56,8 +58,8 @@ class Downloader:
                         (group['id'],))
         self.mariadb_instance.connection.commit()
         # agregar history
-        cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("downloader","in-progress",?,"component")',
-                        (group['id'],))
+        cursor.execute('INSERT INTO history (stage,status,grp_id,component) VALUES ("downloader","in-progress",?,?)',
+                        (group['id'],self.pod_name))
         self.mariadb_instance.connection.commit()
 
         # descargar documentos

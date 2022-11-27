@@ -16,17 +16,44 @@ spec:
     spec:
       containers:
       - name: downloader
-        image: adsasdf/downloader # Cambiarla por nuestra imagen cuando sea creada y subida.
+        image: joseacunacarrera/downloader
         env:
-          - name: RABBITMQ
+          - name: URL_MARIADB
+            value: "databases-mariadb"
+          - name: PASS_MARIADB
+            value: "mypass"
+          - name: USER_MARIADB
+            value: "root"
+          - name: DB_NAME
+            value: "mydb"
+          - name: RABBIT_PASS
+            value: "123"
+          - name: RABBIT_HOST
             value: "monitoring-rabbitmq"
-          - name: RABBITPASS
-            valueFrom:
-              secretKeyRef:
-                name: monitoring-rabbitmq
-                key: rabbitmq-password
-                optional: false
-          - name: RABBITQUEUE
-            value: "extract"
-          - name: ESENDPOINT
-            value: quickstart-es-master-nodes
+          - name: RABBIT_USER
+            value: "user"
+          - name: ELASTIC_USER
+            value: "elastic"
+          - name: ELASTIC_PASS
+            value: "mypass"
+          - name: ELASTIC_HOST
+            value: "quickstart-es-master-nodes"
+          - name: RABBIT_QUEUE_IN
+            value: "loader_queue_out"
+          - name: RABBIT_QUEUE_OUT
+            value: "downloader_queue_out"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: downloader-service
+  labels:
+    app: downloader
+spec:
+  type: ClusterIP
+  selector:
+    app: downloader
+  ports:
+    - port: 3002
